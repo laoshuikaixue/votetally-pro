@@ -1,5 +1,13 @@
 import { Candidate } from '../types';
 
+// Simple ID generator fallback for environments where crypto.randomUUID might be missing
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
 export const parseCandidateList = (text: string): Candidate[] => {
   const lines = text.split('\n').filter(line => line.trim() !== '');
   const candidates: Candidate[] = [];
@@ -22,7 +30,7 @@ export const parseCandidateList = (text: string): Candidate[] => {
 
     if (match) {
       candidates.push({
-        id: crypto.randomUUID(),
+        id: generateId(),
         department: match[1].trim(),
         name: match[2].trim(),
         className: match[3].trim(),
@@ -33,7 +41,7 @@ export const parseCandidateList = (text: string): Candidate[] => {
       const parts = line.split(/[-–—]/);
       if (parts.length >= 2) {
         candidates.push({
-          id: crypto.randomUUID(),
+          id: generateId(),
           department: parts[0].trim(),
           name: parts[1].trim(),
           className: '未知班级',
