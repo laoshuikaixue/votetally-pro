@@ -1,0 +1,5 @@
+{
+  "name": "VoteTally Pro",
+  "description": "A modern, minimalist voting tally application for student council elections. Supports batch import, real-time counting, and automatic winner calculation.",
+  "requestFramePermissions": []
+}
