@@ -1,7 +1,7 @@
 import React from 'react';
 import { Candidate, Winner } from '../types';
 import { groupCandidatesByDept } from '../utils/parser';
-import { Trophy, Award, Zap, Crown } from 'lucide-react';
+import { Trophy, Award, Zap, Crown, Download, FileText } from 'lucide-react';
 
 interface ResultsViewProps {
   candidates: Candidate[];
@@ -24,6 +24,65 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ candidates, onBack }) 
 
   const totalVotes = candidates.reduce((acc, c) => acc + c.votes, 0);
 
+  const downloadResults = () => {
+    const data = {
+      title: "Election Results",
+      exportDate: new Date().toLocaleString(),
+      summary: {
+        totalVotes,
+        totalDepartments: Object.keys(groups).length,
+      },
+      winners: winners.map(w => ({
+        department: w.department,
+        maxVotes: w.maxVotes,
+        candidates: w.candidates.map(c => ({ name: c.name, className: c.className, votes: c.votes }))
+      })),
+      allCandidates: candidates
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `election_results_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadTxtResults = () => {
+    let content = `选举结果公示 (Election Results 2025)\n`;
+    content += `导出时间: ${new Date().toLocaleString()}\n`;
+    content += `========================================\n\n`;
+
+    winners.forEach(winner => {
+      content += `【${winner.department}】\n`;
+      if (winner.candidates.length > 0) {
+        winner.candidates.forEach(c => {
+          content += `  ★ 胜出: ${c.name} (${c.className}) - ${c.votes}票\n`;
+        });
+      } else {
+        content += `  (暂无胜出者)\n`;
+      }
+      content += `\n`;
+    });
+
+    content += `========================================\n`;
+    content += `总投票数: ${totalVotes}\n`;
+    content += `统计部门: ${Object.keys(groups).length}个\n`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `election_results_simple_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="max-w-[1600px] mx-auto p-6 md:p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       
@@ -36,6 +95,24 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ candidates, onBack }) 
            选举结果公示
          </h2>
          <p className="text-slate-400 font-bold tracking-widest uppercase">Election Results 2025</p>
+         
+         <div className="flex items-center justify-center gap-4 mt-8">
+           <button 
+             onClick={downloadResults}
+             className="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-900 rounded-xl font-bold shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all hover:-translate-y-0.5 active:translate-y-0"
+           >
+             <Download size={18} className="text-slate-500" />
+             保存结果 (JSON)
+           </button>
+
+           <button 
+             onClick={downloadTxtResults}
+             className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-300 hover:bg-slate-800 hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0"
+           >
+             <FileText size={18} className="text-slate-400" />
+             导出名单 (TXT)
+           </button>
+         </div>
       </div>
 
       {/* Stats Banner */}
